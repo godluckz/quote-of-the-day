@@ -1,1 +1,1 @@
-# Quote of the Day API
+# Quote of the Day
