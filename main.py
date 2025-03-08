@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-W_DATA_DIR     : str = "data"
-W_ARCHIVE_DIR  : str = "archive"
+W_DATA_DIR       : str = "data"
+W_ARCHIVE_DIR    : str = "archive"
 W_QUOTE_FILE_EXT : str = 'json'
 
 W_QUOTE_FILE         : str = f"{W_DATA_DIR}/quotes.{W_QUOTE_FILE_EXT}"
@@ -71,16 +71,27 @@ def email_quote_of_the_day(p_quote: str, p_week_day: str) -> None:
             print("Atleast email to is required.")
             return
             
-        w_emoji_name = ":face blowing a kiss:"        
+        w_emoji_name = ":face blowing a kiss:"   #https://carpedm20.github.io/emoji/
         w_emoji_name = w_emoji_name.replace(" ","_")
         w_emoji1 = emoji.emojize(w_emoji_name)
 
-        w_emoji_name = ":smiling face with heart-eyes:"        
+        # w_emoji_name = ":smiling face with heart-eyes:"    
+        w_emoji_name = ":heart_hands_medium-dark_skin_tone:"    
         w_emoji_name = w_emoji_name.replace(" ","_")
         w_emoji2 = emoji.emojize(w_emoji_name)
         # print(w_emoji1)        
 
         w_msg = f"Good morning {w_emoji1}\n\n It is a beautiful {p_week_day}, the year of our Lord \n\n{p_quote}\n\nHave a great {p_week_day} {w_emoji2}"        
+
+        # w_msg = f"""
+        #             Good morning {w_emoji1}
+
+        #             It is a beautiful {p_week_day}, the year of our Lord.
+                    
+        #             {p_quote}
+                    
+        #             Have a great {p_week_day} {w_emoji2}"""
+                
         notification.send_email(p_email_to = W_MAIL_TO,
                                 p_subject  = W_SUBJECT,
                                 p_message  = w_msg,
