@@ -10,7 +10,7 @@ W_HOST: str = "smtp.gmail.com"
 W_PORT: int = 587
 w_MAIL_FROM: str = "noreply@noreply.com"    
 
-class NotificationUtility:    
+class EmailNotification:    
     
     def __init__(self, p_data_dir: str = None) -> None:
         self.email_to : list  = []

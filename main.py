@@ -1,5 +1,6 @@
 import random, datetime as dt, emoji, requests, json
-from class_notification_utils import NotificationUtility
+from class_email_notification import EmailNotification
+from class_discord_notification import DiscordNotifiacation
 from os import environ, path, makedirs, remove
 from shutil import move
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ W_QUOTE_FILE_EXT : str = 'json'
 W_QUOTE_FILE         : str = f"{W_DATA_DIR}/quotes.{W_QUOTE_FILE_EXT}"
 W_ARCHIVE_QUOTE_FILE : str = f"{W_ARCHIVE_DIR}/quotes_archive.{W_QUOTE_FILE_EXT}"
 
+W_DISCORD_CHANNEL_ID : int = environ.get("DISCORD_QOD_CHANNEL_ID")
 
 
 def setup_required_dirs():
@@ -57,50 +59,54 @@ def archive_quote_to_file(p_quote : list) -> None:
 
 
 
-def email_quote_of_the_day(p_quote: str, p_week_day: str) -> None:    
-    notification : NotificationUtility = NotificationUtility()    
-    
+def send_quote_of_the_day(p_quote: str, p_week_day: str) -> None:    
+
+    discord_message_sent : bool = False
+
     try:
-        print("==>> Sending email.")
-        
-        W_MAIL_TO:  str = environ.get("EMAIL_TO")
-        W_MAIL_CC:  str = environ.get("EMAIL_CC")
-        W_MAIL_BCC: str = environ.get("EMAIL_BCC")
-        W_SUBJECT:  str = "Hello - Quote of the day - with love."  
-        if not W_MAIL_TO:
-            print("Atleast email to is required.")
-            return
-            
-        w_emoji_name = ":face blowing a kiss:"   #https://carpedm20.github.io/emoji/
-        w_emoji_name = w_emoji_name.replace(" ","_")
-        w_emoji1 = emoji.emojize(w_emoji_name)
-
-        # w_emoji_name = ":smiling face with heart-eyes:"    
-        w_emoji_name = ":heart_hands_medium-dark_skin_tone:"    
-        w_emoji_name = w_emoji_name.replace(" ","_")
-        w_emoji2 = emoji.emojize(w_emoji_name)
-        # print(w_emoji1)        
-
-        w_msg = f"Good morning {w_emoji1}\n\n It is a beautiful {p_week_day}, the year of our Lord \n\n{p_quote}\n\nHave a great {p_week_day} {w_emoji2}"        
-
-        # w_msg = f"""
-        #             Good morning {w_emoji1}
-
-        #             It is a beautiful {p_week_day}, the year of our Lord.
-                    
-        #             {p_quote}
-                    
-        #             Have a great {p_week_day} {w_emoji2}"""
-                
-        notification.send_email(p_email_to = W_MAIL_TO,
-                                p_subject  = W_SUBJECT,
-                                p_message  = w_msg,
-                                p_email_cc = W_MAIL_CC,
-                                p_email_bcc = W_MAIL_BCC)      
-                
-        print("Email sent.")
+        print("==>> Sending Discord message.")
+        discord_notificaton = DiscordNotifiacation(p_channel_id=W_DISCORD_CHANNEL_ID)
+        discord_notificaton.send_message(p_quote)
+        discord_message_sent = True
     except Exception as e:
-        print(f"Fail to send email - msg : {e}")
+        print(f"Fail to send discord message - {e}")
+
+
+    if not discord_message_sent:
+
+        try:
+            print("==>> Sending email.")
+            notification : EmailNotification = EmailNotification()    
+            
+            W_MAIL_TO:  str = environ.get("EMAIL_TO")
+            W_MAIL_CC:  str = environ.get("EMAIL_CC")
+            W_MAIL_BCC: str = environ.get("EMAIL_BCC")
+            W_SUBJECT:  str = "Hello - Quote of the day - with love."  
+            if not W_MAIL_TO:
+                print("Atleast email to is required.")
+                return
+                
+            w_emoji_name = ":face blowing a kiss:"   #https://carpedm20.github.io/emoji/
+            w_emoji_name = w_emoji_name.replace(" ","_")
+            w_emoji1 = emoji.emojize(w_emoji_name)
+
+            # w_emoji_name = ":smiling face with heart-eyes:"    
+            w_emoji_name = ":heart_hands_medium-dark_skin_tone:"    
+            w_emoji_name = w_emoji_name.replace(" ","_")
+            w_emoji2 = emoji.emojize(w_emoji_name)
+            # print(w_emoji1)        
+
+            w_msg = f"Good morning {w_emoji1}\n\n It is a beautiful {p_week_day}, the year of our Lord \n\n{p_quote}\n\nHave a great {p_week_day} {w_emoji2}"        
+                    
+            notification.send_email(p_email_to = W_MAIL_TO,
+                                    p_subject  = W_SUBJECT,
+                                    p_message  = w_msg,
+                                    p_email_cc = W_MAIL_CC,
+                                    p_email_bcc = W_MAIL_BCC)      
+                    
+            print("Email sent.")
+        except Exception as e:
+            print(f"Fail to send email - msg : {e}")
 
 
 
@@ -228,7 +234,7 @@ def main() -> None:
     
     if w_quote_of_the_day:
         w_weekday = w_now.strftime('%A') # read more here: https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior        
-        email_quote_of_the_day(w_quote_of_the_day, w_weekday)
+        send_quote_of_the_day(w_quote_of_the_day, w_weekday)
     else:
         print("Could not find quotes to email out.")
     
