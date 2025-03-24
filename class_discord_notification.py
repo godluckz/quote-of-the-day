@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class DiscordNotifiacation():
+class DiscordNotification():
     
 
     def __init__(self, p_channel_id : int):
@@ -22,15 +22,21 @@ class DiscordNotifiacation():
 
 
     async def on_ready(self):
+        try:
+            w_channel = await self.client.fetch_channel(self.channel_id)
+            # print(f"Got channel: {w_channel}")
 
-        w_channel = await self.client.fetch_channel(self.channel_id)
-        # print(f"Got channel: {w_channel}")
-
-        if w_channel:
-            await w_channel.send(self.message)
-            print("--> Discord Message sent.")
-
-        await self.client.close()    
+            if w_channel:
+                w_chunk_size = 2000
+                for i in range(0, len(self.message), w_chunk_size):
+                    await w_channel.send(self.message[i:i+w_chunk_size]) 
+                                   
+                # await w_channel.send(self.message)
+                print("--> Discord Message sent.")
+        except  Exception as e:
+            print(f"Discord communication error - msg: {e}")
+        finally:
+            await self.client.close()    
             
 
 

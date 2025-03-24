@@ -1,6 +1,6 @@
 import random, datetime as dt, emoji, requests, json
 from class_email_notification import EmailNotification
-from class_discord_notification import DiscordNotifiacation
+from class_discord_notification import DiscordNotification
 from os import environ, path, makedirs, remove
 from shutil import move
 from dotenv import load_dotenv
@@ -65,7 +65,7 @@ def send_quote_of_the_day(p_quote: str, p_week_day: str) -> None:
 
     try:
         print("==>> Sending Discord message.")
-        discord_notificaton = DiscordNotifiacation(p_channel_id=W_DISCORD_CHANNEL_ID)
+        discord_notificaton = DiscordNotification(p_channel_id=W_DISCORD_CHANNEL_ID)
         discord_notificaton.send_message(p_quote)
         discord_message_sent = True
     except Exception as e:

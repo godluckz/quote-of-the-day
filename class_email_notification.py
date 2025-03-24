@@ -1,4 +1,4 @@
-import smtplib
+import smtplib, html
 from email.message import EmailMessage
 from email.mime.multipart import MIMEMultipart 
 from email.mime.text import MIMEText 
@@ -18,15 +18,17 @@ class EmailNotification:
         self.email_bcc: str = ""
         self.subject  : str   = ""
         self.message  : str   = ""     
+        self.mail_message_html : str = ""
         self.data_dir : str = p_data_dir   
     
     
     def send_email(self,
-                   p_email_to: list,
-                   p_subject: str, 
-                   p_message: str,
-                   p_email_cc: str = "",
-                   p_email_bcc: str = "") -> None:
+                   p_email_to   : list,
+                   p_email_cc   : str = "",
+                   p_email_bcc  : str = "",
+                   p_subject    : str = "", 
+                   p_message    : str = "",
+                   p_message_html : str = "") -> None:
         if isinstance(p_email_to,list):
             self.email_to  = p_email_to
         else:
@@ -36,6 +38,7 @@ class EmailNotification:
         self.email_bcc = p_email_bcc
         self.subject   = p_subject
         self.mail_message   = p_message   
+        self.mail_message_html = p_message_html
                 
         w_USER    : str = environ.get("EMAIL_USERNAME")
         W_PASS_KEY: str = environ.get("EMAIL_PASSWORD")            
@@ -43,6 +46,17 @@ class EmailNotification:
         if not w_USER or not W_PASS_KEY:
             print("Incomplete email setup.")            
             return
+
+
+        if not p_message and not p_message_html:
+            print("Email message is missing.")            
+            return
+        
+
+        if not p_subject:
+            print("Email Subject is missing.")            
+            return
+                
 
         w_num_emails = len(self.email_to)
         if w_num_emails == 0 :
@@ -63,16 +77,23 @@ class EmailNotification:
             elif w_num_emails > 2:
                 self.email_bcc = self.email_to[2]   
 
-            w_msg: EmailMessage = MIMEMultipart()            
+            if self.email_cc:                
+                self.email_to.append(self.email_cc)
+            if self.email_bcc:
+                self.email_to.append(self.email_bcc)
+
+            w_msg  = MIMEMultipart("alternative")            
             w_msg["From"]    = w_MAIL_FROM
             w_msg["To"]      = self.email_to[0]                            
             w_msg["Cc"]      = self.email_cc        
             w_msg["Bcc"]     = self.email_bcc
             w_msg["Subject"] = self.subject                        
                         
-
             # attach the body with the msg instance 
-            w_msg.attach(MIMEText(self.mail_message, 'plain')) 
+            if p_message_html:                
+                w_msg.attach(MIMEText(self.mail_message_html, 'html', "utf-8")) 
+            if p_message:
+                w_msg.attach(MIMEText(self.mail_message, 'plain'))             
 
             # open the file to be sent  
             w_file_list = []
@@ -99,15 +120,9 @@ class EmailNotification:
                 w_msg.attach(w_mimeBase) 
 
 
-
             # Converts the Multipart msg into a string 
-            w_msg_text = w_msg.as_string() 
+            w_msg_text = w_msg.as_string()             
     
-            if self.email_cc:                
-                self.email_to.append(self.email_cc)
-            if self.email_bcc:
-                self.email_to.append(self.email_bcc)
-
             # sending the mail 
             # connection.send_message(w_msg_text)        
                     
