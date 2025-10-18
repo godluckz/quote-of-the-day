@@ -34,10 +34,12 @@ def setup_required_dirs():
 def get_quotes_from_file(p_file_name : str) -> list:
     w_all_quotes : list = []
 
-    if path.exists(p_file_name):
-        with open(file=p_file_name, mode="r") as qf:  #they came from https://www.positivityblog.com/monday-motivation-quotes/
-
-            w_all_quotes = json.load(fp=qf)
+    if path.exists(p_file_name) and path.getsize(p_file_name) > 0:
+        with open(file=p_file_name, mode="r") as qf:
+            try:
+                w_all_quotes = json.load(fp=qf)
+            except json.JSONDecodeError:
+                print(f"Warning: {p_file_name} contains invalid JSON")
     return w_all_quotes
 
 
@@ -52,11 +54,11 @@ def write_quotes_to_file(p_file_name : str,
 def archive_quote_to_file(p_quote : list) -> None:
     w_all_quotes : list = []
 
-    if path.exists(W_ARCHIVE_QUOTE_FILE):
-        w_all_quotes : list = get_quotes_from_file(W_ARCHIVE_QUOTE_FILE)
+    
+    if path.exists(W_ARCHIVE_QUOTE_FILE):        
+        w_all_quotes : list = get_quotes_from_file(W_ARCHIVE_QUOTE_FILE)        
 
-    w_all_quotes.append(p_quote)
-
+    w_all_quotes.append(p_quote)    
 
     write_quotes_to_file(p_file_name = W_ARCHIVE_QUOTE_FILE,
                          p_quotes    = w_all_quotes)
@@ -68,7 +70,7 @@ def send_quote_of_the_day(p_quote: str, p_week_day: str) -> None:
     discord_message_sent : bool = False
 
     try:
-        print("==>> Sending Discord message.")
+        print("==>> Sending Quote to using Discord.")
         discord_notificaton = DiscordNotification(p_channel_id=W_DISCORD_CHANNEL_ID)
         discord_notificaton.send_message(p_quote)
         discord_message_sent = True
@@ -79,7 +81,7 @@ def send_quote_of_the_day(p_quote: str, p_week_day: str) -> None:
     if not discord_message_sent:
 
         try:
-            print("==>> Sending email.")
+            print("==>> Sending using email.")
             notification : EmailNotification = EmailNotification()
 
             W_MAIL_TO:  str = environ.get("EMAIL_TO")
@@ -108,14 +110,14 @@ def send_quote_of_the_day(p_quote: str, p_week_day: str) -> None:
                                     p_email_cc = W_MAIL_CC,
                                     p_email_bcc = W_MAIL_BCC)
 
-            print("Email sent.")
+            print("-->> Email sent.")
         except Exception as e:
             print(f"Fail to send email - msg : {e}")
 
 
 
 def convert_quote_txt_to_json() -> None:
-
+    print("-->> Converting quote txt to json")
     w_quote_txt_file : str = "data/quotes.txt"
     if path.exists(w_quote_txt_file):
         with open(w_quote_txt_file, "r") as qf:
@@ -171,6 +173,7 @@ def reload_quotes_file(p_today : dt.datetime) -> None:
 
 
 def get_random_quote(p_today : dt.datetime ) -> str:
+    print("==>>Getting a random quote")
     w_quote_of_the_day : str = None
 
     try:
@@ -183,15 +186,15 @@ def get_random_quote(p_today : dt.datetime ) -> str:
     w_total_quotes_found = len(w_all_quotes)
 
     if w_total_quotes_found > 0:
-        print("==>> Use quote from file.")
+        print("-->> Use quote from file.")
 
         w_quote_choice = random.choice(w_all_quotes)
         w_all_quotes.remove(w_quote_choice) #Remove the quote that was picked
 
-        w_quote_of_the_day = f'"{w_quote_choice["q"]}" - {w_quote_choice["a"]}'
+        w_quote_of_the_day = f'"{w_quote_choice["q"]}" - {w_quote_choice["a"]}'        
 
         archive_quote_to_file(p_quote = w_quote_choice)
-
+        
         # w_total_quotes_left = len(w_all_quotes)
         # print(f"before: {w_total_quotes_left}")
 
@@ -201,7 +204,7 @@ def get_random_quote(p_today : dt.datetime ) -> str:
     else:
         reload_quotes_file(p_today)
         try:
-            print("==>> Get quote from qapi.")
+            print("-->> Get quote from qapi.")
             w_quotes_response = requests.get(url="https://qapi.vercel.app/api/random")
             # print(w_quotes_response.status_code)
 
@@ -215,7 +218,7 @@ def get_random_quote(p_today : dt.datetime ) -> str:
 
         if not w_quote_of_the_day:
             try:
-                print("==>> Get quote from zenquotes.")
+                print("-->> Get quote from zenquotes.")
                 w_quotes_response = requests.get(url="https://zenquotes.io/api/random")
                 # print(w_quotes_response.status_code)
 
@@ -247,12 +250,10 @@ def main() -> None:
 
 if __name__ == "__main__":
     setup_required_dirs()
-    print("====================================")
+    print("============++++++++++++============")    
     print("=======Processing Started!!=======")
-    print("====================================")
-    print("============++++++++++++============")
+    print("====================================")    
     main()
     print("====================================")
-    print("=======Processing Completed!!=======")
-    print("====================================")
+    print("=======Processing Completed!!=======")    
     print("============++++++++++++============")
